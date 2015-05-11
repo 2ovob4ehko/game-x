@@ -1,0 +1,239 @@
+/*********************MAP-PAGE*************************/
+body
+	{
+		overflow:hidden;
+		margin:0;
+		font-family:Arial;
+	}
+.login
+	{
+		position:fixed;
+		top:0px;
+		right:0px;
+		border:1px solid grey;
+		border-radius:0 0 0 10px;
+		text-shadow:0 0 10px white;
+		font-size:17px;
+	}
+.login a
+	{
+		text-decoration:none;
+		color:#000000;
+	}
+.login table td
+	{
+		border-right:2px solid grey;
+		padding:5px;
+	}
+#screen_panel
+	{
+		width:95%;
+		height:90%;
+		position:absolute;
+		top:1%;
+		left:2%;
+	}
+#scr
+	{
+		border:1px solid black;
+		width:85%;
+		height:85%;
+		overflow:hidden;
+		position:absolute;
+		top:8%;
+		left:8%;
+	}
+canvas
+	{
+		background:#000000;
+	}
+.view_button
+	{
+		width:100px;
+		height:100px;
+		position:absolute;
+		cursor:pointer;
+	}
+#right_button
+	{
+		width:30px;
+		top:45%;
+		right:0px;
+		background:url('/img/errow_right.png');
+	}
+#bottom_button
+	{
+		height:30px;
+		bottom:0px;
+		left:45%;
+		background:url('/img/errow_bottom.png');
+	}
+#left_button
+	{
+		width:30px;
+		top:45%;
+		left:0px;
+		background:url('/img/errow_left.png');
+	}
+#top_button
+	{
+		height:30px;
+		top:0px;
+		left:45%;
+		background:url('/img/errow_top.png');
+	}
+#minimap
+	{
+		border:1px solid #dddd99;
+		//padding:10px 35px;
+		position:fixed;
+		left:0px;
+		bottom:0px;
+		z-index:2;
+		background:rgba(255, 254, 224, 0.8);
+		border-radius:0 10px 0 0;
+		overflow:hidden;
+		width:31px;
+		height:31px;
+	}
+#butMinimap
+	{
+		border-radius:10px;
+		border:1px solid #3c3c3c;
+		background:#4e4e4e;
+		color:#ffffff;
+		width:25px;
+		height:25px;
+		padding:2px;
+		text-align:center;
+		font-family:"Comic Sans MS", cursive, sans-serif;
+		cursor:pointer;
+		position:absolute;
+		top:0px;
+		right:0px;
+	}
+#cord
+	{
+		margin:auto;
+		width:70px;
+		text-align:center;
+		border:1px solid #e2a925;
+		border-bottom:none;
+		border-radius:5px 5px 0 0;
+		background:#dfb624;
+	}
+#minican
+	{
+		display:block;
+		border:2px solid #e2a925;
+		margin:auto;
+	}
+#control
+	{
+		border:1px solid #dddd99;
+		background:#ffffdd;
+		width:45%;
+		height:60px;
+		position:fixed;
+		right:0px;
+		bottom:0px;
+		z-index:2;
+		border-radius:10px 0 0 0;
+	}
+.button
+	{
+		width:30px;
+		height:30px;
+		padding:10px;
+		margin:5px;
+		border:1px solid gray;
+		border-radius:10px;
+		cursor:pointer;
+		background:#ddffdd;
+	}
+#information
+	{
+		border:1px solid #dddd99;
+		position:fixed;
+		left:0px;
+		bottom:0px;
+		z-index:2;
+		background:rgba(255, 254, 224, 0.8);
+		border-radius:0 10px 0 0;
+		overflow:hidden;
+		width:45%;
+		height:60px;
+	}
+#text
+	{
+		font-size:15px;
+		padding:5px;
+	}
+#message
+	{
+		border:1px solid rgba(0, 81, 255, 0.78);
+		border-radius:10px;
+		top:30%;
+		left:30%;
+		width:300px;
+		text-align:center;
+		min-height:100px;
+		padding:0 20px 20px 20px;
+		background:rgba(0, 123, 255, 0.76);
+		position:fixed;
+		z-index:3;
+		display:none;
+	}
+#message p
+	{
+		color:#ffffff;
+	}
+#message button
+	{
+		position:absolute;
+		bottom:10px;
+		left:45%;
+	}
+
+/*********************AUTHORIZ-PAGE*************************/
+.formPanel
+	{
+		border:1px solid rgba(0, 81, 255, 0.78);
+		border-radius:10px;
+		margin:auto;
+		width:200px;
+		padding:0 20px 20px 20px;
+		background:rgba(0, 123, 255, 0.76);
+	}
+.formPanel h1
+	{
+		font-size:25px;
+		text-align:center;
+		color:#ffffff;
+	}
+.formPanel table
+	{
+		margin:auto;
+		text-align:center;
+	}
+.input_text
+	{
+		width:170px;
+	}
+#leftLink
+	{
+		color:#ffffff;
+		text-decoration: none;
+		font-size:15px;
+		margin:auto;
+	}
+.error
+	{
+		color:#ffffff;
+		background:rgb(248, 124, 124);
+		border:1px solid rgb(255, 66, 66);
+		width:100%;
+		text-align:center;
+		border-radius:2px;
+		padding:5px 0;
+	}

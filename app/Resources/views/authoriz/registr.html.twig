@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+  Реєстрація - Game No-Civilization
+{% endblock %}
+
+{% block stylesheets %}
+<link href="{{asset('css/style.css')}}" rel="stylesheet" type="text/css"/>
+{% endblock %}
+
+{% block body %}
+  <div class="formPanel">
+    <h1>Реєстрація</h1>
+    <form method="POST" action="/registr/action">
+      <table>
+        <tr>
+          <td><input class="input_text" type="text" placeholder="Логін" name="login"></td>
+        </tr>
+        <tr>
+          <td><input class="input_text" type="password" placeholder="Пароль" name="pass1"></td>
+        </tr>
+        <tr>
+          <td><input class="input_text" type="password" placeholder="Підтвердження" name="pass2"></td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <input type="submit" value="Зареєструвати">
+          </td>
+        </tr>
+      </table>
+    </form>
+    {%if error is defined%}
+    <div class="error">{{error}}</div>
+    {%endif%}
+    <a id="leftLink" href="/authoriz">Авторизація</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,333 @@
+var step=70;
+var scr = document.getElementById("scr");
+var canvas = document.createElement("canvas");
+canvas.id = "canvas";
+var move=step*pole.length/2;
+canvas.width=iso(step*(pole[0].length-1)+move+step,step*0-move).x;
+canvas.height=iso(step*(pole[0].length-1)+move+step,step*(pole.length-1)-move+step).y;
+scr.appendChild(canvas);
+var ctx = canvas.getContext('2d');
+var minimap = document.getElementById("minimap");
+var minican = document.createElement("canvas");
+minican.id = "minican";
+var ministep=5;
+minican.width=iso(ministep*(pole[0].length-1)+ministep*pole.length/2+ministep,ministep*0-ministep*pole.length/2).x;
+minican.height=iso(ministep*(pole[0].length-1)+ministep*pole.length/2+ministep,ministep*(pole.length-1)-ministep*pole.length/2+ministep).y;
+minimap.appendChild(minican);
+var mctx = minican.getContext('2d');
+var cord=document.getElementById('cord');
+var runButton = document.getElementById('run_button');
+var attackButton = document.getElementById('attack_button');
+var stopButton = document.getElementById('stop_button');
+var right_button = document.getElementById('right_button');
+var left_button = document.getElementById('left_button');
+var bottom_button = document.getElementById('bottom_button');
+var top_button = document.getElementById('top_button');
+var butMinimap = document.getElementById('butMinimap');
+var images = {};
+var BreakException= {};
+var heroes = {};
+loadImage("centurion");
+loadImage("select");
+loadImage("target");
+loadImage("forest");
+loadImage("grass");
+loadImage("mountain");
+var selectedUnit=null;
+var selected=false;
+var runPressed=false;
+var attackPressed=false;
+var frame=0;
+var img_pole=[images["grass"],images["forest"],images["mountain"]];
+var field1 = new Field(pole,img_pole,step,ctx);
+{%for hero in heroes%}
+  heroes[{{hero.id}}] = new Hero({{hero.id}},{{hero.x}},{{hero.y}},{{hero.goalX}},{{hero.goalY}},images["centurion"],step,'{{hero.title}}','{{hero.color}}',ctx,move);
+  heroes[{{hero.id}}].checkHaveTarget();
+  if({{hero.user.id}}=={{id}}){
+    heroes[{{hero.id}}].setOwn();
+    var scrollX=iso({{hero.x}}*step+this.move,{{hero.y}}*step-this.move).x;
+    var scrollY=iso({{hero.x}}*step+this.move,{{hero.y}}*step-this.move).y;
+    scr.scrollTop=scrollY-scr.offsetHeight/2;
+    scr.scrollLeft=scrollX-scr.offsetWidth/2;
+  }
+{%endfor%}
+
+setInterval(function(){
+  clear();
+  field1.draw();
+  if(frame<11){frame++;}else{frame=0}
+  if(selected){
+    selectedUnit.selectUnit(images["select"],frame);
+    if(selectedUnit.haveTarget){
+      selectedUnit.targetCell(images["target"],frame);
+    }
+  }
+  Object.keys(heroes).forEach(function(key){
+    heroes[key].draw();
+  });
+  showMiniMap();
+},100);
+setInterval(function(){
+  getAjaxHeroes();
+},1000);
+
+Object.keys(heroes).forEach(function(key){
+  speedAnim(heroes[key]);
+});
+function speedAnim(h){
+  var timeoutId=setTimeout(function(){
+    h.checkHaveTarget();
+    if(h.haveTarget){
+      h.goToGoal(pole);
+      setAjaxHeroes(h.id,"x",h.x);
+      setAjaxHeroes(h.id,"y",h.y);
+    }
+    clearTimeout(timeoutId);
+    var timeoutId2=setTimeout(function(){speedAnim(h);clearTimeout(timeoutId2);},10);
+  },h.speed);
+}
+function loadImage(name) {
+  images[name] = new Image();
+  images[name].src = "/img/"+name + ".png";
+}
+canvas.onmousemove=function(e){
+  var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
+  cord.innerHTML="("+Math.ceil((p.x-move)/step)+";"+Math.ceil((p.y+move)/step)+")";
+}
+canvas.onmouseup=function(e){
+  if(runPressed){
+    var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
+    selectedUnit.setGoal(Math.ceil((p.x-move)/step),Math.ceil((p.y+move)/step));
+    setAjaxHeroes(selectedUnit.id,"goal_x",Math.ceil((p.x-move)/step));
+    setAjaxHeroes(selectedUnit.id,"goal_y",Math.ceil((p.y+move)/step));
+    selectedUnit.haveTarget=true;
+    runPressed=false;
+    runButton.style.background="#ddffdd";
+  }else if(attackPressed){
+    try {
+      Object.keys(heroes).forEach(function(key){
+        var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
+        if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},heroes[key])){
+          if(!heroes[key].own){
+            post('/fight', {h_id_f: selectedUnit.id,h_id_s: heroes[key].id});
+            throw BreakException;
+          }
+        }
+      });
+    } catch(er) {
+      if (er!==BreakException) throw er;
+    }
+    attackPressed=false;
+    attackButton.style.background="#ddffdd";
+  }else{
+    try {
+      Object.keys(heroes).forEach(function(key){
+        var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
+        if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},heroes[key])){
+          if(heroes[key].own){
+            selectedUnit=heroes[key];
+            selected=true;
+            if(selected)throw BreakException;
+          }
+        }else{
+          selected=false;
+          selectedUnit=null;
+        }
+      });
+    } catch(er) {
+      if (er!==BreakException) throw er;
+    }
+  }
+}
+runButton.onclick=function(){
+  if(selected){
+    runPressed=true;
+    this.style.background="#bbddbb";
+  }
+}
+attackButton.onclick=function(){
+  if(selected){
+    attackPressed=true;
+    this.style.background="#bbddbb";
+  }
+}
+stopButton.onclick=function(){
+  if(selected){
+    runPressed=false;
+    runButton.style.background="#ddffdd";
+    attackPressed=false;
+    attackButton.style.background="#ddffdd";
+    selectedUnit.setGoal(selectedUnit.x,selectedUnit.y);
+    setAjaxHeroes(selectedUnit.id,"goal_x",selectedUnit.x);
+    setAjaxHeroes(selectedUnit.id,"goal_y",selectedUnit.y);
+  }
+}
+var intervId;
+var sx=0*ministep;
+var sy=0*ministep;
+right_button.onmousedown=function(){
+  intervId=setInterval(function(){
+    scr.scrollLeft+=step;
+    sx=scr.scrollLeft/step*ministep;
+  },200);
+}
+right_button.onmouseup=function(){
+  clearInterval(intervId);
+}
+left_button.onmousedown=function(){
+  intervId=setInterval(function(){
+    scr.scrollLeft-=step;
+    sx=scr.scrollLeft/step*ministep;
+  },200);
+}
+left_button.onmouseup=function(){
+  clearInterval(intervId);
+}
+top_button.onmousedown=function(){
+  intervId=setInterval(function(){
+    scr.scrollTop-=step;
+    sy=scr.scrollTop/step*ministep;
+  },200);
+}
+top_button.onmouseup=function(){
+  clearInterval(intervId);
+}
+bottom_button.onmousedown=function(){
+  intervId=setInterval(function(){
+    scr.scrollTop+=step;
+    sy=scr.scrollTop/step*ministep;
+  },200);
+}
+bottom_button.onmouseup=function(){
+  clearInterval(intervId);
+}
+var showMini=1;
+butMinimap.onmousedown=function(){
+  if(showMini){
+    minimap.style.width="auto";
+    minimap.style.height="auto";
+    minimap.style.padding="10px 35px";
+    showMini=0;
+  }else{
+    minimap.style.width="31px";
+    minimap.style.height="31px";
+    minimap.style.padding="0";
+    showMini=1;
+  }
+}
+minican.onmouseup=function(e){
+  var w=scr.offsetWidth/step;
+  var h=scr.offsetHeight/step;
+  scr.scrollTop=(Math.ceil(mouse(minican,e).y/ministep)-h/2)*step;
+  scr.scrollLeft=(Math.ceil(mouse(minican,e).x/ministep)-w/2)*step;
+  sy=mouse(minican,e).y-h/2*ministep;
+  sx=mouse(minican,e).x-w/2*ministep;
+}
+function clear(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+function hitTest(a,b){
+  if(((a.x>(b.x-1)*step)&&(a.x<b.x*step))&&((a.y>(b.y-1)*step)&&(a.y<b.y*step))){
+    return true;
+  }else{return false;}
+}
+function mouse(canvas,e){
+  var rect = canvas.getBoundingClientRect();
+  return{
+    x: e.pageX-rect.left,
+    y: e.pageY-rect.top
+  };
+}
+function showMiniMap(){
+  mctx.clearRect(0,0,minican.width,minican.height);
+  for(var i=0;i<pole.length;i++){
+    for(var j=0;j<pole[0].length;j++){
+      if(pole[i][j].m==1){mctx.fillStyle="#ffeeaa";}
+			if(pole[i][j].m==2){mctx.fillStyle="#419b05";}
+			if(pole[i][j].m==3){mctx.fillStyle="#9b3105";}
+      var m=ministep*pole.length/2;
+      var x=iso(j*ministep+m,i*ministep-m).x;
+			var y=iso(j*ministep+m,i*ministep-m).y;
+      mctx.beginPath();
+      mctx.moveTo(x,y);
+			var p={x:ministep*j+m+ministep,y:ministep*i-m};
+      mctx.lineTo(iso(p.x,p.y).x,iso(p.x,p.y).y);
+			p={x:ministep*j+m+ministep,y:ministep*i-m+ministep};
+      mctx.lineTo(iso(p.x,p.y).x,iso(p.x,p.y).y);
+			p={x:ministep*j+m,y:ministep*i-m+ministep};
+      mctx.lineTo(iso(p.x,p.y).x,iso(p.x,p.y).y);
+      mctx.lineTo(x,y);
+      mctx.closePath();
+      mctx.fill();
+    }
+  }
+  var w=scr.offsetWidth/step;
+  var h=scr.offsetHeight/step;
+  mctx.beginPath();
+	mctx.moveTo(sx,sy);
+	mctx.lineTo(sx+w*ministep,sy);
+	mctx.lineTo(sx+w*ministep,sy+h*ministep);
+	mctx.lineTo(sx,sy+h*ministep);
+	mctx.lineTo(sx,sy);
+	mctx.stroke();
+}
+function getAjaxHeroes(){
+  $.ajax({
+    url: "/getheroes.json",
+    cache: false,
+    dataType: 'json',
+    success: function(json){
+      Object.keys(json).forEach(function(key){
+        if(typeof heroes[key] === 'undefined'){
+          heroes[key] = new Hero(key,json[key]['x'],json[key]['y'],json[key]['goal_x'],json[key]['goal_y'],
+          images["centurion"],step,json[key]['title'],json[key]['color'],ctx,move);
+          speedAnim(heroes[key]);
+        }
+        if(json[key]['user']=={{id}}){
+          heroes[key].setOwn();
+        }else{
+          heroes[key].x=json[key]['x'];
+          heroes[key].y=json[key]['y'];
+          heroes[key].goal.x=json[key]['goal_x'];
+          heroes[key].goal.y=json[key]['goal_y'];
+        }
+        heroes[key].flag=json[key]['color'];
+      });
+    }
+  });
+}
+function setAjaxHeroes(id,param,value){
+  $.ajax({
+    url: "/setheroes/"+id+"/"+param+"/"+value,
+    cache: false
+  });
+}
+function iso(x,y){
+	var point = {};
+	point.x = x - y;
+	point.y = (x + y) / 2;
+	return point;
+}
+function twoD(x,y){
+	var point = {};
+	point.x = (2 * y + x) / 2;
+	point.y = (2 * y - x) / 2;
+	return point;
+}
+function post(path, params, method) {
+  method = method || "post";
+  var form = document.createElement("form");
+  form.setAttribute("method", method);
+  form.setAttribute("action", path);
+  for(var key in params) {
+    if(params.hasOwnProperty(key)) {
+      var hiddenField = document.createElement("input");
+      hiddenField.setAttribute("type", "hidden");
+      hiddenField.setAttribute("name", key);
+      hiddenField.setAttribute("value", params[key]);
+      form.appendChild(hiddenField);
+    }
+  }
+  document.body.appendChild(form);
+  form.submit();
+}

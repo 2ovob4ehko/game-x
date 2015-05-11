@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Game No-Civilization
+{% endblock %}
+
+{% block stylesheets %}
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+	<link href="{{asset('css/style.css')}}" rel="stylesheet" type="text/css"/>
+{% endblock %}
+
+{% block javascripts %}
+	<script src="{{asset('js/field.js')}}"></script>
+	<script src="{{asset('js/hero.js')}}"></script>
+	<script src="{{asset('js/pole.js')}}"></script>
+	<script src="{{asset('js/jquery.js')}}"></script>
+	<script src="{{asset('js/view.js')}}"></script>
+{% endblock %}
+
+{% block body %}
+<div id="screen_panel">
+	<div id="top_button" class="view_button"></div>
+	<div id="left_button" class="view_button"></div>
+	<div id="scr"></div>
+	<div id="right_button" class="view_button"></div>
+	<div id="bottom_button" class="view_button"></div></td>
+</div>
+<div class="login" style="background:{{flag}}">
+	<table>
+		<tr>
+			<td><a href="/exit">Вихід</a></td>
+			<td>{{login}}</td>
+		</tr>
+	</table>
+</div>
+<div id="panel">
+	<div id="minimap">
+		<div id="butMinimap">M</div>
+		<div id="cord">(0;0)</div>
+	</div>
+	<div id="control">
+		<img src="img/run.png" id="run_button" class="button">
+		<img src="img/attack.png" id="attack_button" class="button">
+		<img src="img/stop.png" id="stop_button" class="button">
+	</div>
+</div>
+{% endblock %}

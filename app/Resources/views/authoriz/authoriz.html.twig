@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+  Авторизація - Game No-Civilization
+{% endblock %}
+
+{% block stylesheets %}
+<link href="{{asset('css/style.css')}}" rel="stylesheet" type="text/css"/>
+{% endblock %}
+
+{% block body %}
+  <div class="formPanel">
+    <h1>Авторизація</h1>
+    <form method="POST" action="/authoriz/action">
+      <table>
+        <tr>
+          <td><input class="input_text" type="text" placeholder="Логін" name="login"></td>
+        </tr>
+        <tr>
+          <td><input class="input_text" type="password" placeholder="Пароль" name="pass"></td>
+        </tr>
+        <tr>
+          <td colspan="2"><input type="submit" value="Увійти"></td>
+        </tr>
+      </table>
+    </form>
+    {%if error is defined%}
+    <div class="error">{{error}}</div>
+    {%endif%}
+    <a id="leftLink" href="/registr">Зареєструватися</a>
+  </div>
+{% endblock %}

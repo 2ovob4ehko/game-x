@@ -1,0 +1,353 @@
+{% if win == 0 %}
+var step=70;
+var turn={{fightTurn}};
+var scr = document.getElementById("scr");
+var canvas = document.createElement("canvas");
+canvas.id = "canvas";
+var move=step*minipole.length/2;
+canvas.width=iso(step*(minipole[0].length-1)+move+step,step*0-move).x;
+canvas.height=iso(step*(minipole[0].length-1)+move+step,step*(minipole.length-1)-move+step).y;
+scr.appendChild(canvas);
+var ctx = canvas.getContext('2d');
+var cord=document.getElementById('cord');
+var runButton = document.getElementById('run_button');
+var attackButton = document.getElementById('attack_button');
+var turnButton = document.getElementById('turn_button');
+var right_button = document.getElementById('right_button');
+var left_button = document.getElementById('left_button');
+var bottom_button = document.getElementById('bottom_button');
+var top_button = document.getElementById('top_button');
+var text = document.getElementById('text');
+var images = {};
+var BreakException= {};
+var wars = {};
+var clases = {};
+loadImage("select");
+loadImage("forest");
+loadImage("grass");
+loadImage("mountain");
+var selectedUnit=null;
+var selected=false;
+var runPressed=false;
+var attackPressed=false;
+var frame=0;
+var img_pole=[images["grass"],images["forest"],images["mountain"]];
+var field1 = new Field(minipole,img_pole,step,ctx);
+{%for clas in clases%}
+loadImage("{{clas.img}}");
+clases[{{clas.id}}] = new Clas(images["{{clas.img}}"],'{{clas.name}}',{{clas.health}},{{clas.power}},{{clas.defense}},{{clas.lengthGo}},{{clas.lengthAttack}});
+{%endfor%}
+var wars1=[];
+var wars2=[];
+{%for war in wars1%}
+wars1.push({'id':{{war.id}},'x':{{war.x}},'y':{{war.y}},'clasid':{{war.clasid}},'quantity':{{war.quantity}},'wound':{{war.wound}},'color':'{{war.color}}','userid':{{war.userid}}});
+{%endfor%}
+{%for war in wars2%}
+wars2.push({'id':{{war.id}},'x':{{war.x}},'y':{{war.y}},'clasid':{{war.clasid}},'quantity':{{war.quantity}},'wound':{{war.wound}},'color':'{{war.color}}','userid':{{war.userid}}});
+{%endfor%}
+var ix=0;
+var iy=1;
+wars1.forEach(function(war){
+  if(war.x==0){
+    if(ix<minipole[0].length){
+      ix++;
+    }else{
+      ix=1;
+      iy++;
+    }
+    war.x=ix;
+    war.y=iy;
+    setAjaxWars(war.id,"x",ix);
+    setAjaxWars(war.id,"y",iy);
+  }
+  wars[war.id] = new Warrior(war.id,war.x,war.y,clases[war.clasid],war.quantity,war.wound,war.color,step,ctx,move);
+  if(war.userid=={{id}}){wars[war.id].setOwn();}
+  wars[war.id].setRotation(0);
+});
+var ix=minipole[0].length+1;
+var iy=minipole.length;
+wars2.forEach(function(war){
+  if(war.x==0){
+    if(ix>1){
+      ix--;
+    }else{
+      ix=minipole[0].length-1;
+      iy--;
+    }
+    war.x=ix;
+    war.y=iy;
+    setAjaxWars(war.id,"x",ix);
+    setAjaxWars(war.id,"y",iy);
+  }
+  wars[war.id] = new Warrior(war.id,war.x,war.y,clases[war.clasid],war.quantity,war.wound,war.color,step,ctx,move);
+  if(war.userid=={{id}}){wars[war.id].setOwn();}
+  wars[war.id].setRotation(4);
+});
+var scrollX=iso(minipole[0].length/2*step+move,minipole.length/2*step-move).x;
+var scrollY=iso(minipole[0].length/2*step+move,minipole.length/2*step-move).y;
+scr.scrollTop=scrollY-scr.offsetHeight/2;
+scr.scrollLeft=scrollX-scr.offsetWidth/2;
+
+setInterval(function(){
+  clear();
+  field1.draw();
+  if(frame<11){frame++;}else{frame=0}
+  if(selected){
+    selectedUnit.selectUnit(images["select"],frame);
+  }
+  Object.keys(wars).forEach(function(key){
+    wars[key].draw();
+  });
+},100);
+setInterval(function(){
+  getAjaxWars(wars1[0].userid,wars2[0].userid);
+  getAjaxTurn({{fightId}});
+  if(turn==1){
+    text.innerHTML='Черга: {{userName1}}';
+  }else{
+    text.innerHTML='Черга: {{userName2}}';
+  }
+},1000);
+
+function loadImage(name) {
+  images[name] = new Image();
+  images[name].src = "/img/"+name + ".png";
+}
+canvas.onmouseup=function(e){
+  var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
+  var xTarget=Math.ceil((p.x-move)/step);
+  var yTarget=Math.ceil((p.y+move)/step);
+  if((turn=={{num}})&&(xTarget>=1)&&(yTarget>=1)&&(xTarget<=minipole[0].length)&&(yTarget<=minipole.length)){
+    if(runPressed){
+      if(selectedUnit.goToGoal(xTarget,yTarget)){
+        setAjaxWars(selectedUnit.id,"x",xTarget);
+        setAjaxWars(selectedUnit.id,"y",yTarget);
+        setAjaxWars(selectedUnit.id,"tired",selectedUnit.tired);
+        runPressed=false;
+        runButton.style.background="#ddffdd";
+      }
+    }else if(attackPressed){
+      try {
+        Object.keys(wars).forEach(function(key){
+          if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},wars[key])){
+            if(!wars[key].own){
+              var clash=selectedUnit.clash(wars[key]);
+              if(clash==1){
+                delAjaxWar(wars[key].id);
+                delete wars[key];
+                setAjaxWars(selectedUnit.id,"tired",selectedUnit.clas.lengthGo);
+              }else if(clash==2){
+                setAjaxWars(wars[key].id,"quantity",wars[key].quantity);
+                setAjaxWars(wars[key].id,"wound",wars[key].wound);
+                setAjaxWars(selectedUnit.id,"tired",selectedUnit.clas.lengthGo);
+              }
+              attackPressed=false;
+              attackButton.style.background="#ddffdd";
+              throw BreakException;
+            }
+          }
+        });
+      } catch(er) {
+        if (er!==BreakException) throw er;
+      }
+    }else{
+      try {
+        Object.keys(wars).forEach(function(key){
+          var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
+          if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},wars[key])){
+            if(wars[key].own){
+              selectedUnit=wars[key];
+              selected=true;
+              throw BreakException;
+            }
+          }else{
+            selected=false;
+            selectedUnit=null;
+          }
+        });
+      } catch(er) {
+        if (er!==BreakException) throw er;
+      }
+    }
+  }
+}
+runButton.onclick=function(){
+  if(runPressed){
+    runPressed=false;
+    runButton.style.background="#ddffdd";
+  }else if(selected){
+    runPressed=true;
+    this.style.background="#bbddbb";
+    attackPressed=false;
+    attackButton.style.background="#ddffdd";
+  }
+}
+attackButton.onclick=function(){
+  if(attackPressed){
+    attackPressed=false;
+    attackButton.style.background="#ddffdd";
+  }else if(selected){
+    attackPressed=true;
+    this.style.background="#bbddbb";
+    runPressed=false;
+    runButton.style.background="#ddffdd";
+  }
+}
+turnButton.onclick=function(){
+  if(turn=={{num}}){
+    var allSteps=0;
+    Object.keys(wars).forEach(function(key){
+      if(wars[key].own){
+        allSteps+=wars[key].clas.lengthGo-wars[key].tired;
+      }
+    });
+    if(allSteps>0){
+      if(confirm('Ваші війська ще мають силу для дій. Ви впевнені в закінченні ходу?')){
+        if(turn==2){
+          setAjaxTurn({{fightId}},1);
+  			}else{
+          setAjaxTurn({{fightId}},2);
+  			}
+        Object.keys(wars).forEach(function(key){
+          wars[key].tired=0;
+          setAjaxWars(key,"tired",0);
+        });
+      }
+    }else{
+      if(turn==2){
+        text.innerHTML='Черга: {{userName1}}';
+        setAjaxTurn({{fightId}},1);
+      }else{
+        text.innerHTML='Черга: {{userName2}}';
+        setAjaxTurn({{fightId}},2);
+      }
+      Object.keys(wars).forEach(function(key){
+        wars[key].tired=0;
+        setAjaxWars(key,"tired",0);
+      });
+    }
+  }
+}
+var intervId;
+right_button.onmousedown=function(){
+  intervId=setInterval(function(){
+    scr.scrollLeft+=step;
+  },200);
+}
+right_button.onmouseup=function(){
+  clearInterval(intervId);
+}
+left_button.onmousedown=function(){
+  intervId=setInterval(function(){
+    scr.scrollLeft-=step;
+  },200);
+}
+left_button.onmouseup=function(){
+  clearInterval(intervId);
+}
+top_button.onmousedown=function(){
+  intervId=setInterval(function(){
+    scr.scrollTop-=step;
+  },200);
+}
+top_button.onmouseup=function(){
+  clearInterval(intervId);
+}
+bottom_button.onmousedown=function(){
+  intervId=setInterval(function(){
+    scr.scrollTop+=step;
+  },200);
+}
+bottom_button.onmouseup=function(){
+  clearInterval(intervId);
+}
+{% elseif win == 1 %}
+  $("#message p").text("Переміг нападник");
+  $("#message button").click(function(){
+    window.location.href = '{{ url('homepage') }}';
+  });
+  $("#message").show();
+{% elseif win == 2 %}
+  $("#message p").text("Перемогла жертва");
+  $("#message button").click(function(){
+    window.location.href = '{{ url('homepage') }}';
+  });
+  $("#message").show();
+{% endif %}
+function clear(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+function hitTest(a,b){
+  if(((a.x>(b.x-1)*step)&&(a.x<b.x*step))&&((a.y>(b.y-1)*step)&&(a.y<b.y*step))){
+    return true;
+  }else{return false;}
+}
+function mouse(canvas,e){
+  var rect = canvas.getBoundingClientRect();
+  return{
+    x: e.pageX-rect.left,
+    y: e.pageY-rect.top
+  };
+}
+function getAjaxWars(h_id_f,h_id_s){
+  $.ajax({
+    url: "/getwars/"+h_id_f+"/"+h_id_s,
+    cache: false,
+    dataType: 'json',
+    success: function(json){
+      if(json[0]==1){
+        location.reload();
+      }else if(json[0]==2){
+        location.reload();
+      }else{
+        Object.keys(json).forEach(function(key){
+          wars[key].x=json[key]['x'];
+          wars[key].y=json[key]['y'];
+          wars[key].quantity=json[key]['quantity'];
+          wars[key].wound=json[key]['wound'];
+          wars[key].tired=json[key]['tired'];
+        });
+      }
+    }
+  });
+}
+function setAjaxWars(id,param,value){
+  $.ajax({
+    url: "/setwars/"+id+"/"+param+"/"+value,
+    cache: false
+  });
+}
+function getAjaxTurn(id){
+  $.ajax({
+    url: "/getturn/"+id,
+    cache: false,
+    dataType: 'json',
+    success: function(json){
+      turn=json[0];
+    }
+  });
+}
+function setAjaxTurn(id,turn){
+  $.ajax({
+    url: "/setturn/"+id+"/"+turn,
+    cache: false
+  });
+}
+function delAjaxWar(id){
+  $.ajax({
+    url: "/delwar/"+id,
+    cache: false
+  });
+}
+function iso(x,y){
+	var point = {};
+	point.x = x - y;
+	point.y = (x + y) / 2;
+	return point;
+}
+function twoD(x,y){
+	var point = {};
+	point.x = (2 * y + x) / 2;
+	point.y = (2 * y - x) / 2;
+	return point;
+}
