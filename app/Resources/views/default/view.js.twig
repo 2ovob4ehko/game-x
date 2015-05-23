@@ -109,6 +109,8 @@ canvas.onmouseup=function(e){
         var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
         if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},heroes[key])){
           if(!heroes[key].own){
+            //Створити в базі запис нового бою черга=1; атакуючий=selectedUnit.id
+            //змінити запис selectedUnit.id та heroes[key].id - внести значення поля бою нового створеного бою
             post('/fight', {h_id_f: selectedUnit.id,h_id_s: heroes[key].id});
             throw BreakException;
           }

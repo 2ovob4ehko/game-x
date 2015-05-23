@@ -98,10 +98,22 @@ class DefaultController extends Controller
         throw $this->createNotFoundException(
           'alert(Жодного класу не знайдено)'
         );
-      }else if (!$warriors1) {
+      }else if (!$warriors1 || !$warriors2) {
+        if(!$warriors1){
+          $h_id=$h_id_f;
+          $rendered = $this->renderView('default/fight.js.twig',
+          array('win'=>2));
+        }else{
+          $h_id=$h_id_s;
+          $rendered = $this->renderView('default/fight.js.twig',
+          array('win'=>1));
+        }
+        //Обнулити координати виживших військ
+        //видалення запису битви
+        //обнулення значення ід битви у кожного героя хто брав участь
         $hero = $this->getDoctrine()
         ->getRepository('AppBundle:Heroes')
-        ->findById($h_id_f);
+        ->findById($h_id);
         if(count($hero)>0){
           $heroes = $this->getDoctrine()
           ->getRepository('AppBundle:Heroes')
@@ -111,26 +123,6 @@ class DefaultController extends Controller
             $this->getDoctrine()->getManager()->flush();
           }
         }
-        $rendered = $this->renderView('default/fight.js.twig',
-        array('win'=>2));
-        $response = new Response($rendered);
-        $response->headers->set('Content-Type','text/javascript');
-        return $response;
-      }else if (!$warriors2) {
-        $hero = $this->getDoctrine()
-        ->getRepository('AppBundle:Heroes')
-        ->findById($h_id_s);
-        if(count($hero)>0){
-          $heroes = $this->getDoctrine()
-          ->getRepository('AppBundle:Heroes')
-          ->findByUser($hero[0]->getUser()->getId());
-          if(count($heroes)>1){
-            $this->getDoctrine()->getManager()->remove($hero[0]);
-            $this->getDoctrine()->getManager()->flush();
-          }
-        }
-        $rendered = $this->renderView('default/fight.js.twig',
-        array('win'=>1));
         $response = new Response($rendered);
         $response->headers->set('Content-Type','text/javascript');
         return $response;
@@ -140,8 +132,8 @@ class DefaultController extends Controller
           $war->clasid=$war->getClass()->getId();
           $war->userid=$war->getHero()->getUser()->getId();
           $name1=$war->getHero()->getUser()->getLogin();
-          $fightId=$war->getHero()->getUser()->getFight()->getId();
-          $fightTurn=$war->getHero()->getUser()->getFight()->getTurn();
+          $fightId=$war->getHero()->getFight()->getId();
+          $fightTurn=$war->getHero()->getFight()->getTurn();
         }
         foreach ($warriors2 as $war){
           $war->color=$war->getHero()->getUser()->getFlag();

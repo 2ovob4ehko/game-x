@@ -42,12 +42,6 @@ class Users
     $this->heroes = new ArrayCollection();
   }
 
-  /**
-  * @ORM\ManyToOne(targetEntity="Fights", inversedBy="users")
-  * @ORM\JoinColumn(name="fight_id", referencedColumnName="id")
-  */
-  protected $fight;
-
     /**
      * Get id
      *
@@ -176,7 +170,7 @@ class Users
     /**
      * Get fight
      *
-     * @return \AppBundle\Entity\Fights 
+     * @return \AppBundle\Entity\Fights
      */
     public function getFight()
     {

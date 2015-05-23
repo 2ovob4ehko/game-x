@@ -23,14 +23,10 @@ class Fights
   protected $turn;
 
   /**
-  * @ORM\OneToMany(targetEntity="Users", mappedBy="fights")
+  * @ORM\OneToOne(targetEntity="Heroes", inversedBy="fights")
+  * @ORM\JoinColumn(name="attacker", referencedColumnName="id")
   */
-  protected $users;
-
-  public function __construct()
-  {
-    $this->users = new ArrayCollection();
-  }
+  protected $attacker;
 
     /**
      * Get id
@@ -102,5 +98,120 @@ class Fights
         $this->$param = $value;
 
         return $this;
+    }
+
+    /**
+     * Set f_h
+     *
+     * @param \AppBundle\Entity\Heroes $fH
+     * @return Fights
+     */
+    public function setFH(\AppBundle\Entity\Heroes $fH = null)
+    {
+        $this->f_h = $fH;
+
+        return $this;
+    }
+
+    /**
+     * Get f_h
+     *
+     * @return \AppBundle\Entity\Heroes
+     */
+    public function getFH()
+    {
+        return $this->f_h;
+    }
+
+    /**
+     * Set s_h
+     *
+     * @param \AppBundle\Entity\Heroes $sH
+     * @return Fights
+     */
+    public function setSH(\AppBundle\Entity\Heroes $sH = null)
+    {
+        $this->s_h = $sH;
+
+        return $this;
+    }
+
+    /**
+     * Get s_h
+     *
+     * @return \AppBundle\Entity\Heroes
+     */
+    public function getSH()
+    {
+        return $this->s_h;
+    }
+
+    /**
+     * Set hero_f_id
+     *
+     * @param \AppBundle\Entity\Heroes $heroFId
+     * @return Fights
+     */
+    public function setHeroFId(\AppBundle\Entity\Heroes $heroFId = null)
+    {
+        $this->hero_f_id = $heroFId;
+
+        return $this;
+    }
+
+    /**
+     * Get hero_f_id
+     *
+     * @return \AppBundle\Entity\Heroes
+     */
+    public function getHeroFId()
+    {
+        return $this->hero_f_id;
+    }
+
+    /**
+     * Set hero_s_id
+     *
+     * @param \AppBundle\Entity\Heroes $heroSId
+     * @return Fights
+     */
+    public function setHeroSId(\AppBundle\Entity\Heroes $heroSId = null)
+    {
+        $this->hero_s_id = $heroSId;
+
+        return $this;
+    }
+
+    /**
+     * Get hero_s_id
+     *
+     * @return \AppBundle\Entity\Heroes
+     */
+    public function getHeroSId()
+    {
+        return $this->hero_s_id;
+    }
+
+    /**
+     * Set attacker
+     *
+     * @param \AppBundle\Entity\Heroes $attacker
+     * @return Fights
+     */
+    public function setAttacker(\AppBundle\Entity\Heroes $attacker = null)
+    {
+        $this->attacker = $attacker;
+
+        return $this;
+    }
+
+    /**
+     * Get attacker
+     *
+     * @return \AppBundle\Entity\Heroes 
+     */
+    public function getAttacker()
+    {
+        return $this->attacker;
     }
 }

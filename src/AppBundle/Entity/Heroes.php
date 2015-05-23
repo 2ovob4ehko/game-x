@@ -58,6 +58,12 @@ class Heroes
     $this->warriors = new ArrayCollection();
   }
 
+  /**
+  * @ORM\ManyToOne(targetEntity="Fights", inversedBy="heroes")
+  * @ORM\JoinColumn(name="fight_id", referencedColumnName="id")
+  */
+  protected $fight;
+
     /**
      * Get id
      *
@@ -239,10 +245,33 @@ class Heroes
     /**
      * Get warriors
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getWarriors()
     {
         return $this->warriors;
+    }
+
+    /**
+     * Set fight
+     *
+     * @param \AppBundle\Entity\Fights $fight
+     * @return Heroes
+     */
+    public function setFight(\AppBundle\Entity\Fights $fight = null)
+    {
+        $this->fight = $fight;
+
+        return $this;
+    }
+
+    /**
+     * Get fight
+     *
+     * @return \AppBundle\Entity\Fights
+     */
+    public function getFight()
+    {
+        return $this->fight;
     }
 }
