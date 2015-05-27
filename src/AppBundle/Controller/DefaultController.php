@@ -100,20 +100,37 @@ class DefaultController extends Controller
         );
       }else if (!$warriors1 || !$warriors2) {
         if(!$warriors1){
+          $warriors=$warriors2;
           $h_id=$h_id_f;
           $rendered = $this->renderView('default/fight.js.twig',
           array('win'=>2));
         }else{
+          $warriors=$warriors1;
           $h_id=$h_id_s;
           $rendered = $this->renderView('default/fight.js.twig',
           array('win'=>1));
         }
         //Обнулити координати виживших військ
+        foreach ($warriors as $war){
+          $war->setX(0);
+          $war->setY(0);
+          $this->getDoctrine()->getManager()->flush();
+        }
         //видалення запису битви
-        //обнулення значення ід битви у кожного героя хто брав участь
         $hero = $this->getDoctrine()
         ->getRepository('AppBundle:Heroes')
         ->findById($h_id);
+        $this->getDoctrine()->getManager()->remove($hero[0]->getFight());
+        $this->getDoctrine()->getManager()->flush();
+        //обнулення значення ід битви у кожного героя хто брав участь
+        $hero1 = $this->getDoctrine()
+        ->getRepository('AppBundle:Heroes')
+        ->findById($h_id_f);
+        $hero2 = $this->getDoctrine()
+        ->getRepository('AppBundle:Heroes')
+        ->findById($h_id_s);
+        $hero1[0]->setFight();
+        $hero2[0]->setFight();
         if(count($hero)>0){
           $heroes = $this->getDoctrine()
           ->getRepository('AppBundle:Heroes')
@@ -127,6 +144,18 @@ class DefaultController extends Controller
         $response->headers->set('Content-Type','text/javascript');
         return $response;
       }else {
+        if($warriors1[0]->getHero()->getFight()==NULL){
+          $fight = new Fights();
+          $fight->setTurn(1);
+          $fight->setAttacker($warriors1[0]->getHero());
+
+          $warriors1[0]->getHero()->setFight($fight);
+          $warriors2[0]->getHero()->setFight($fight);
+
+          $em = $this->getDoctrine()->getManager();
+          $em->persist($fight);
+          $em->flush();
+        }
         foreach ($warriors1 as $war){
           $war->color=$war->getHero()->getUser()->getFlag();
           $war->clasid=$war->getClass()->getId();

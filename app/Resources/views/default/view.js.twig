@@ -37,6 +37,7 @@ var selectedUnit=null;
 var selected=false;
 var runPressed=false;
 var attackPressed=false;
+var fightId=0;
 var frame=0;
 var img_pole=[images["grass"],images["forest"],images["mountain"]];
 var field1 = new Field(pole,img_pole,step,ctx);
@@ -109,8 +110,10 @@ canvas.onmouseup=function(e){
         var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
         if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},heroes[key])){
           if(!heroes[key].own){
-            //Створити в базі запис нового бою черга=1; атакуючий=selectedUnit.id
-            //змінити запис selectedUnit.id та heroes[key].id - внести значення поля бою нового створеного бою
+            /*newAjaxFight(selectedUnit.id);
+            setAjaxHeroes(selectedUnit.id,'fight_id',fightId);
+            setAjaxHeroes(heroes[key].id,'fight_id',fightId);
+            alert(fightId);*/
             post('/fight', {h_id_f: selectedUnit.id,h_id_s: heroes[key].id});
             throw BreakException;
           }
@@ -302,6 +305,16 @@ function setAjaxHeroes(id,param,value){
   $.ajax({
     url: "/setheroes/"+id+"/"+param+"/"+value,
     cache: false
+  });
+}
+function newAjaxFight(attacker){
+  $.ajax({
+    url: "/newfight/"+attacker,
+    cache: false,
+    dataType: 'json',
+    success: function(json){
+      fightId=json[0];
+    }
   });
 }
 function iso(x,y){

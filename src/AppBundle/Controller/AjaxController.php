@@ -185,4 +185,26 @@ class AjaxController extends Controller
     $em->flush();
     return $response = new Response();
   }
+
+  /**
+  * @Route("/newfight/{attacker}", name="create fight")
+  */
+  public function newFightAjaxAction($attacker)
+  {
+    $fight = new Fights();
+    $fight->setTurn(1);
+    $em = $this->getDoctrine()->getManager();
+    $hero = $em->getRepository('AppBundle:Heroes')
+    ->find($attacker);
+    $fight->setAttacker($hero);
+
+    $em->persist($fight);
+    $em->flush();
+
+    $id=$fight->getId();
+
+    $response = new Response(json_encode($id, JSON_FORCE_OBJECT));
+    $response->headers->set('Content-Type', 'application/json');
+    return $response;
+  }
 }
