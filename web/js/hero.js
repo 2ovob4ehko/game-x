@@ -120,9 +120,9 @@ function goToGoal(shema){
 			this.rotation=7;
 		}
 	}
-	if(shema[this.y-1][this.x-1]==1){
+	if(shema[this.y-1][this.x-1].m==1){
 		this.speed=1000;
-	}else if (shema[this.y-1][this.x-1]==2){
+	}else if (shema[this.y-1][this.x-1].m==2){
 		this.speed=5000;
 	}else{
 		this.speed=10000;
