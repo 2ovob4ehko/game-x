@@ -1,58 +1,86 @@
+//Визначник маштабності карти і не тільки
 var step=70;
+//Екран на якому показується територія Canvas
 var scr = document.getElementById("scr");
+//Територія Canvas
 var canvas = document.createElement("canvas");
 canvas.id = "canvas";
+//змінна костиль, яка здвигає зображення, щоб воно не виходило за край канваса
 var move=step*pole.length/2;
+//Розрахунок розміру канваса по розміру масиву карти
 canvas.width=iso(step*(pole[0].length-1)+move+step,step*0-move).x;
 canvas.height=iso(step*(pole[0].length-1)+move+step,step*(pole.length-1)-move+step).y;
 scr.appendChild(canvas);
 var ctx = canvas.getContext('2d');
+//Міні карта
 var minimap = document.getElementById("minimap");
 var minican = document.createElement("canvas");
 minican.id = "minican";
+//маштабність мінікарти
 var ministep=5;
+//Визначення розміру канваса мінікарти
 minican.width=iso(ministep*(pole[0].length-1)+ministep*pole.length/2+ministep,ministep*0-ministep*pole.length/2).x;
 minican.height=iso(ministep*(pole[0].length-1)+ministep*pole.length/2+ministep,ministep*(pole.length-1)-ministep*pole.length/2+ministep).y;
 minimap.appendChild(minican);
 var mctx = minican.getContext('2d');
+//Вікно відображення координат
 var cord=document.getElementById('cord');
+//кнопки дій героя
 var runButton = document.getElementById('run_button');
 var attackButton = document.getElementById('attack_button');
 var stopButton = document.getElementById('stop_button');
+//кнопки управління оглядом
 var right_button = document.getElementById('right_button');
 var left_button = document.getElementById('left_button');
 var bottom_button = document.getElementById('bottom_button');
 var top_button = document.getElementById('top_button');
+//кнопка розгортання/згортання мінікарти
 var butMinimap = document.getElementById('butMinimap');
+//масив зображень, які наносяться на територіяю
 var images = {};
+//Масив виключень
 var BreakException= {};
+//Масив героїв
 var heroes = {};
+//завантаження зображень на сторінку
 loadImage("centurion");
 loadImage("select");
 loadImage("target");
 loadImage("forest");
 loadImage("grass");
 loadImage("mountain");
+//Вибраний юніт
 var selectedUnit=null;
+//індикатор вибраності юніта
 var selected=false;
+//індикатор нажатої кнопки
 var runPressed=false;
 var attackPressed=false;
+//ідентифікатор бою
 var fightId=0;
+//змінна кадру анімації
 var frame=0;
+//масив зображень рельєфу території
 var img_pole=[images["grass"],images["forest"],images["mountain"]];
+//Створення об’єкту території
 var field1 = new Field(pole,img_pole,step,ctx);
+//створення об’єктів героїв з масиву взятого з бази
 {%for hero in heroes%}
   heroes[{{hero.id}}] = new Hero({{hero.id}},{{hero.x}},{{hero.y}},{{hero.goalX}},{{hero.goalY}},images["centurion"],step,'{{hero.title}}','{{hero.color}}',ctx,move);
+  //Визначення чи задана ціль для преміщення
   heroes[{{hero.id}}].checkHaveTarget();
+  //Якщо герой наш
   if({{hero.user.id}}=={{id}}){
+    //зазначити, що герой наш
     heroes[{{hero.id}}].setOwn();
+    //центрувати огляд території на цьому герої
     var scrollX=iso({{hero.x}}*step+this.move,{{hero.y}}*step-this.move).x;
     var scrollY=iso({{hero.x}}*step+this.move,{{hero.y}}*step-this.move).y;
     scr.scrollTop=scrollY-scr.offsetHeight/2;
     scr.scrollLeft=scrollX-scr.offsetWidth/2;
   }
 {%endfor%}
-
+//перемалювання: території, вибору героя, цілі героя, всіх героїв, мінікарти
 setInterval(function(){
   clear();
   field1.draw();
@@ -68,13 +96,15 @@ setInterval(function(){
   });
   showMiniMap();
 },100);
+//Оновлення змінених статусів героїв з бази
 setInterval(function(){
   getAjaxHeroes();
 },1000);
-
+//Запуск для всіх героїв анімації переміщення по території згідно цілі
 Object.keys(heroes).forEach(function(key){
   speedAnim(heroes[key]);
 });
+//функція анімації переміщення героїв
 function speedAnim(h){
   var timeoutId=setTimeout(function(){
     h.checkHaveTarget();
@@ -87,28 +117,37 @@ function speedAnim(h){
     var timeoutId2=setTimeout(function(){speedAnim(h);clearTimeout(timeoutId2);},10);
   },h.speed);
 }
+//функція завантаження зображень на сторінку
 function loadImage(name) {
   images[name] = new Image();
   images[name].src = "/img/"+name + ".png";
 }
+//функція при русі мишкою - зміна індикатора кординат
 canvas.onmousemove=function(e){
   var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
   cord.innerHTML="("+Math.ceil((p.x-move)/step)+";"+Math.ceil((p.y+move)/step)+")";
 }
+//функція при нажиманні на територію
 canvas.onmouseup=function(e){
+  //якщо кнопка руху вже нажата
   if(runPressed){
     var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
+    //задається нова ціль руху
     selectedUnit.setGoal(Math.ceil((p.x-move)/step),Math.ceil((p.y+move)/step));
     setAjaxHeroes(selectedUnit.id,"goal_x",Math.ceil((p.x-move)/step));
     setAjaxHeroes(selectedUnit.id,"goal_y",Math.ceil((p.y+move)/step));
     selectedUnit.haveTarget=true;
+    //віджимається кнопка руху
     runPressed=false;
     runButton.style.background="#ddffdd";
+  //якщо нажата кнопка нападу
   }else if(attackPressed){
     try {
+      //по кожному герою перевіряється чи на нього нажали мишкою
       Object.keys(heroes).forEach(function(key){
         var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
         if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},heroes[key])){
+          //якщо ціль нападу не наш юніт - почати бій
           if(!heroes[key].own){
             /*newAjaxFight(selectedUnit.id);
             setAjaxHeroes(selectedUnit.id,'fight_id',fightId);
@@ -122,18 +161,23 @@ canvas.onmouseup=function(e){
     } catch(er) {
       if (er!==BreakException) throw er;
     }
+    //віджимається кнопка нападу
     attackPressed=false;
     attackButton.style.background="#ddffdd";
+  //якщо ніяка функціональна кнопка не нажата
   }else{
     try {
+      //Перевірити чи мишка нажимає на якогось героя
       Object.keys(heroes).forEach(function(key){
         var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
         if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},heroes[key])){
+          //якщо герой наш - вибрати його
           if(heroes[key].own){
             selectedUnit=heroes[key];
             selected=true;
             if(selected)throw BreakException;
           }
+        //якщо мишка не попала на нашого героя - зняти виділення виділеного героя
         }else{
           selected=false;
           selectedUnit=null;
