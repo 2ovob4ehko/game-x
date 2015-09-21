@@ -211,7 +211,9 @@ stopButton.onclick=function(){
     setAjaxHeroes(selectedUnit.id,"goal_y",selectedUnit.y);
   }
 }
+//Інтервал який визначає з якою інтенсивністю буде рухатись огляд
 var intervId;
+//Координати мітки огляду на мінікарті
 var sx=0*ministep;
 var sy=0*ministep;
 right_button.onmousedown=function(){
@@ -250,6 +252,7 @@ bottom_button.onmousedown=function(){
 bottom_button.onmouseup=function(){
   clearInterval(intervId);
 }
+//Функція згортання/розгортання мінікарти
 var showMini=1;
 butMinimap.onmousedown=function(){
   if(showMini){
@@ -264,22 +267,29 @@ butMinimap.onmousedown=function(){
     showMini=1;
   }
 }
+//функція переміщення огляду за допомогою мінікарти
 minican.onmouseup=function(e){
+  //визначення розмірів огляду в комірках
   var w=scr.offsetWidth/step;
   var h=scr.offsetHeight/step;
+  //Переміщення огляду за вказаними мишкою координатами
   scr.scrollTop=(Math.ceil(mouse(minican,e).y/ministep)-h/2)*step;
   scr.scrollLeft=(Math.ceil(mouse(minican,e).x/ministep)-w/2)*step;
+  //Зміна координат мітки огляду на мінікарті
   sy=mouse(minican,e).y-h/2*ministep;
   sx=mouse(minican,e).x-w/2*ministep;
 }
+//Функція очищення канвасу території
 function clear(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 }
+//Функція визначення співпадіння двох координат
 function hitTest(a,b){
   if(((a.x>(b.x-1)*step)&&(a.x<b.x*step))&&((a.y>(b.y-1)*step)&&(a.y<b.y*step))){
     return true;
   }else{return false;}
 }
+//Функція визначення координат мишки на канвасі
 function mouse(canvas,e){
   var rect = canvas.getBoundingClientRect();
   return{
@@ -287,6 +297,7 @@ function mouse(canvas,e){
     y: e.pageY-rect.top
   };
 }
+//Функція малювання мінікарти
 function showMiniMap(){
   mctx.clearRect(0,0,minican.width,minican.height);
   for(var i=0;i<pole.length;i++){
@@ -310,6 +321,7 @@ function showMiniMap(){
       mctx.fill();
     }
   }
+  //малювання індикатору огляду
   var w=scr.offsetWidth/step;
   var h=scr.offsetHeight/step;
   mctx.beginPath();
@@ -320,6 +332,7 @@ function showMiniMap(){
 	mctx.lineTo(sx,sy);
 	mctx.stroke();
 }
+//Функція отримання інформації про героїв та зміна їх статусу
 function getAjaxHeroes(){
   $.ajax({
     url: "/getheroes.json",
@@ -345,12 +358,14 @@ function getAjaxHeroes(){
     }
   });
 }
+//Функція задання значення параметра герою
 function setAjaxHeroes(id,param,value){
   $.ajax({
     url: "/setheroes/"+id+"/"+param+"/"+value,
     cache: false
   });
 }
+//Функція створення бою
 function newAjaxFight(attacker){
   $.ajax({
     url: "/newfight/"+attacker,
@@ -361,18 +376,21 @@ function newAjaxFight(attacker){
     }
   });
 }
+//Функція ізометрично перетворення
 function iso(x,y){
 	var point = {};
 	point.x = x - y;
 	point.y = (x + y) / 2;
 	return point;
 }
+//Функція зворотнього ізометричного перетворення
 function twoD(x,y){
 	var point = {};
 	point.x = (2 * y + x) / 2;
 	point.y = (2 * y - x) / 2;
 	return point;
 }
+//Функція відправки данних через форму методом пост
 function post(path, params, method) {
   method = method || "post";
   var form = document.createElement("form");

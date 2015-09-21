@@ -1,52 +1,81 @@
+//виконувати якщо переможця ще невизначено
 {% if win == 0 %}
+//Визначник маштабності карти і не тільки
 var step=70;
+//Визначення чия черга нападати
 var turn={{fightTurn}};
+//Екран на якому показується територія Canvas
 var scr = document.getElementById("scr");
+//Територія Canvas
 var canvas = document.createElement("canvas");
 canvas.id = "canvas";
+//змінна костиль, яка здвигає зображення, щоб воно не виходило за край канваса
 var move=step*minipole.length/2;
+//Розрахунок розміру канваса по розміру масиву карти
 canvas.width=iso(step*(minipole[0].length-1)+move+step,step*0-move).x;
 canvas.height=iso(step*(minipole[0].length-1)+move+step,step*(minipole.length-1)-move+step).y;
 scr.appendChild(canvas);
 var ctx = canvas.getContext('2d');
+//Вікно відображення координат
 var cord=document.getElementById('cord');
+//кнопки дій воїнів
 var runButton = document.getElementById('run_button');
 var attackButton = document.getElementById('attack_button');
 var turnButton = document.getElementById('turn_button');
+//кнопки управління оглядом
 var right_button = document.getElementById('right_button');
 var left_button = document.getElementById('left_button');
 var bottom_button = document.getElementById('bottom_button');
 var top_button = document.getElementById('top_button');
+//коментар подій
 var text = document.getElementById('text');
+//масив зображень, які наносяться на територіяю
 var images = {};
+//Масив виключень
 var BreakException= {};
+//масив воїнів
 var wars = {};
+//Масив класів воїнів
 var clases = {};
+//завантаження зображень на сторінку
 loadImage("select");
 loadImage("forest");
 loadImage("grass");
 loadImage("mountain");
+//Вибраний юніт
 var selectedUnit=null;
+//індикатор вибраності юніта
 var selected=false;
+//індикатор нажатої кнопки
 var runPressed=false;
 var attackPressed=false;
+//змінна кадру анімації
 var frame=0;
+//масив зображень рельєфу території
 var img_pole=[images["grass"],images["forest"],images["mountain"]];
+//Створення об’єкту території
 var field1 = new Field(minipole,img_pole,step,ctx);
+//Для кожного класу
 {%for clas in clases%}
+//завантаження зображення класу
 loadImage("{{clas.img}}");
+//створення об’єту класу
 clases[{{clas.id}}] = new Clas(images["{{clas.img}}"],'{{clas.name}}',{{clas.health}},{{clas.power}},{{clas.defense}},{{clas.lengthGo}},{{clas.lengthAttack}});
 {%endfor%}
+//масиви воїнів першого і другого героїв
 var wars1=[];
 var wars2=[];
+//конвертування php масиву в js масив
 {%for war in wars1%}
 wars1.push({'id':{{war.id}},'x':{{war.x}},'y':{{war.y}},'clasid':{{war.clasid}},'quantity':{{war.quantity}},'wound':{{war.wound}},'color':'{{war.color}}','userid':{{war.userid}}});
 {%endfor%}
 {%for war in wars2%}
 wars2.push({'id':{{war.id}},'x':{{war.x}},'y':{{war.y}},'clasid':{{war.clasid}},'quantity':{{war.quantity}},'wound':{{war.wound}},'color':'{{war.color}}','userid':{{war.userid}}});
 {%endfor%}
+//змінні кординат розміщення воїнів на території
 var ix=0;
 var iy=1;
+//алгоритм розміщення воїнів першого героя на території
 wars1.forEach(function(war){
   if(war.x==0){
     if(ix<minipole[0].length){
@@ -64,6 +93,7 @@ wars1.forEach(function(war){
   if(war.userid=={{id}}){wars[war.id].setOwn();}
   wars[war.id].setRotation(0);
 });
+//алгоритм розміщення воїнів другого героя на території
 var ix=minipole[0].length+1;
 var iy=minipole.length;
 wars2.forEach(function(war){
@@ -83,11 +113,12 @@ wars2.forEach(function(war){
   if(war.userid=={{id}}){wars[war.id].setOwn();}
   wars[war.id].setRotation(4);
 });
+//центрувати огляд території
 var scrollX=iso(minipole[0].length/2*step+move,minipole.length/2*step-move).x;
 var scrollY=iso(minipole[0].length/2*step+move,minipole.length/2*step-move).y;
 scr.scrollTop=scrollY-scr.offsetHeight/2;
 scr.scrollLeft=scrollX-scr.offsetWidth/2;
-
+//перемалювання: території, вибору героя, всіх воїнів
 setInterval(function(){
   clear();
   field1.draw();
@@ -99,6 +130,7 @@ setInterval(function(){
     wars[key].draw();
   });
 },100);
+//Оновлення змінених статусів воїнів з бази, та визначення чия зараз черга
 setInterval(function(){
   getAjaxWars(wars1[0].userid,wars2[0].userid);
   getAjaxTurn({{fightId}});
@@ -108,17 +140,21 @@ setInterval(function(){
     text.innerHTML='Черга: {{userName2}}';
   }
 },1000);
-
+//функція завантаження зображень на сторінку
 function loadImage(name) {
   images[name] = new Image();
   images[name].src = "/img/"+name + ".png";
 }
+//функція при нажиманні на територію
 canvas.onmouseup=function(e){
   var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
   var xTarget=Math.ceil((p.x-move)/step);
   var yTarget=Math.ceil((p.y+move)/step);
+  //Якщо зараз наша черга і мишку натиснули на території
   if((turn=={{num}})&&(xTarget>=1)&&(yTarget>=1)&&(xTarget<=minipole[0].length)&&(yTarget<=minipole.length)){
+    //якщо натиснута кнопка руху
     if(runPressed){
+      //
       if(selectedUnit.goToGoal(xTarget,yTarget)){
         setAjaxWars(selectedUnit.id,"x",xTarget);
         setAjaxWars(selectedUnit.id,"y",yTarget);
