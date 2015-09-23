@@ -154,27 +154,40 @@ canvas.onmouseup=function(e){
   if((turn=={{num}})&&(xTarget>=1)&&(yTarget>=1)&&(xTarget<=minipole[0].length)&&(yTarget<=minipole.length)){
     //якщо натиснута кнопка руху
     if(runPressed){
-      //
+      //запускається функція руху з перевіркою чи це посилам воїну
       if(selectedUnit.goToGoal(xTarget,yTarget)){
+        //якщо посилам - змінюються координати на вказані
         setAjaxWars(selectedUnit.id,"x",xTarget);
         setAjaxWars(selectedUnit.id,"y",yTarget);
         setAjaxWars(selectedUnit.id,"tired",selectedUnit.tired);
         runPressed=false;
         runButton.style.background="#ddffdd";
       }
+      //якщо нажата кнопка атака
     }else if(attackPressed){
       try {
+        //для кожного воїна
         Object.keys(wars).forEach(function(key){
+          //якщо поцілили на цього воїна
           if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},wars[key])){
+            //якщо цей воїн не наш
             if(!wars[key].own){
+              //запускається функція сутички, та виводить її результат
               var clash=selectedUnit.clash(wars[key]);
+              //якщо після сутички жертва повністю побита
               if(clash==1){
+                //видалення вбитого воїна
                 delAjaxWar(wars[key].id);
                 delete wars[key];
+                //збільшення втомлення нападника
                 setAjaxWars(selectedUnit.id,"tired",selectedUnit.clas.lengthGo);
+              //якщо після сутички жертва ще жива
               }else if(clash==2){
+                //збереження нової кількості жертви
                 setAjaxWars(wars[key].id,"quantity",wars[key].quantity);
+                //збереження рівня пораненості
                 setAjaxWars(wars[key].id,"wound",wars[key].wound);
+                //збільшення втомлення нападника
                 setAjaxWars(selectedUnit.id,"tired",selectedUnit.clas.lengthGo);
               }
               attackPressed=false;
@@ -186,8 +199,10 @@ canvas.onmouseup=function(e){
       } catch(er) {
         if (er!==BreakException) throw er;
       }
+      //якщо ніяка кнопка не нажата
     }else{
       try {
+        //для кожного воїна: якщо попали на нашого воїна - виділили його, якщо ні зняли виділення
         Object.keys(wars).forEach(function(key){
           var p=twoD(mouse(canvas,e).x,mouse(canvas,e).y);
           if(hitTest({x:Math.ceil(p.x-move),y:Math.ceil(p.y+move)},wars[key])){
@@ -207,6 +222,7 @@ canvas.onmouseup=function(e){
     }
   }
 }
+//функція натиснення кнопки руху
 runButton.onclick=function(){
   if(runPressed){
     runPressed=false;
@@ -218,6 +234,7 @@ runButton.onclick=function(){
     attackButton.style.background="#ddffdd";
   }
 }
+//функція натиснення кнопки атаки
 attackButton.onclick=function(){
   if(attackPressed){
     attackPressed=false;
@@ -229,26 +246,36 @@ attackButton.onclick=function(){
     runButton.style.background="#ddffdd";
   }
 }
+//функція натиснення кнопки завершення черги
 turnButton.onclick=function(){
+  //якщо зараз наша черга
   if(turn=={{num}}){
+    //змінна визначення загальної кількості можливих кроків воїнів нашого героя
     var allSteps=0;
+    //для всіх наших воїнів визначити загальну суму кроків
     Object.keys(wars).forEach(function(key){
       if(wars[key].own){
         allSteps+=wars[key].clas.lengthGo-wars[key].tired;
       }
     });
+    //якщо ще якийсь воїн може ходити
     if(allSteps>0){
       if(confirm('Ваші війська ще мають силу для дій. Ви впевнені в закінченні ходу?')){
+        //при підтверженні запитання - змінити чергу
         if(turn==2){
+          text.innerHTML='Черга: {{userName1}}';
           setAjaxTurn({{fightId}},1);
   			}else{
+          text.innerHTML='Черга: {{userName2}}';
           setAjaxTurn({{fightId}},2);
   			}
+        //задання нашим воїнам рівня максимального відпочинку
         Object.keys(wars).forEach(function(key){
           wars[key].tired=0;
           setAjaxWars(key,"tired",0);
         });
       }
+    //якщо всі воїни видихлись - змінити чергу
     }else{
       if(turn==2){
         text.innerHTML='Черга: {{userName1}}';
@@ -257,6 +284,7 @@ turnButton.onclick=function(){
         text.innerHTML='Черга: {{userName2}}';
         setAjaxTurn({{fightId}},2);
       }
+      //задання нашим воїнам рівня максимального відпочинку
       Object.keys(wars).forEach(function(key){
         wars[key].tired=0;
         setAjaxWars(key,"tired",0);
@@ -264,6 +292,8 @@ turnButton.onclick=function(){
     }
   }
 }
+
+//кнопки контролю огляду
 var intervId;
 right_button.onmousedown=function(){
   intervId=setInterval(function(){
@@ -297,6 +327,7 @@ bottom_button.onmousedown=function(){
 bottom_button.onmouseup=function(){
   clearInterval(intervId);
 }
+//якщо хтось виграв - написати хто виграв і переслати на головну сторінку
 {% elseif win == 1 %}
   $("#message p").text("Переміг нападник");
   $("#message button").click(function(){
@@ -325,6 +356,7 @@ function mouse(canvas,e){
     y: e.pageY-rect.top
   };
 }
+//функція отримання даних про воїнів з бази та оновлення їх
 function getAjaxWars(h_id_f,h_id_s){
   $.ajax({
     url: "/getwars/"+h_id_f+"/"+h_id_s,
@@ -347,12 +379,14 @@ function getAjaxWars(h_id_f,h_id_s){
     }
   });
 }
+//функція збереження в базу параметрів воїна
 function setAjaxWars(id,param,value){
   $.ajax({
     url: "/setwars/"+id+"/"+param+"/"+value,
     cache: false
   });
 }
+//отримати з бази значення черги
 function getAjaxTurn(id){
   $.ajax({
     url: "/getturn/"+id,
@@ -363,18 +397,21 @@ function getAjaxTurn(id){
     }
   });
 }
+//збереження в базу значення черги
 function setAjaxTurn(id,turn){
   $.ajax({
     url: "/setturn/"+id+"/"+turn,
     cache: false
   });
 }
+//видалення воїна з бази
 function delAjaxWar(id){
   $.ajax({
     url: "/delwar/"+id,
     cache: false
   });
 }
+//функції ізометрії
 function iso(x,y){
 	var point = {};
 	point.x = x - y;
